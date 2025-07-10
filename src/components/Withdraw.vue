@@ -295,7 +295,7 @@ async function fetchWithdrawHistory() {
                 </div>
               </div>
               <div class="w-1/2">
-                <label class="block text-sm font-semibold text-dark dark:text-white mb-1">CVC</label>
+                <label class="block text-sm font-semibold text-dark dark:text-white mb-1">CCV</label>
                 <div class="relative flex items-center">
                   <svg class="absolute left-3 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/>
@@ -303,7 +303,7 @@ async function fetchWithdrawHistory() {
                   </svg>
                   <input type="text" v-model="cardCVC"
                     class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 pl-10 pr-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition placeholder-gray-400 dark:placeholder-gray-500 tracking-widest"
-                    placeholder="CVC" maxlength="4" autocomplete="cc-csc" />
+                    placeholder="CCV" maxlength="4" autocomplete="cc-csc" />
                 </div>
               </div>
             </div>
