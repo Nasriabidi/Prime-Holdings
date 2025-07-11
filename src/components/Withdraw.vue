@@ -1,6 +1,13 @@
 <script setup>
 // ...existing code...
 import { computed } from 'vue';
+import { ref, watch } from 'vue';
+import { useDark, useToggle } from '@vueuse/core';
+import { useUserStore } from '../stores/userStore';
+import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
 // Withdraw Modal State
 const showWithdrawModal = ref(false);
 const withdrawStep = ref(0); // 0: choose method, 1: form
@@ -11,11 +18,10 @@ const selectedApp = ref('');
 const usdtWalletAddress = ref('');
 const withdrawError = ref('');
 
-const cardName = ref('');
-const cardEmail = ref('');
-const cardNumber = ref('');
-const cardCVC = ref('');
-
+const bankName = ref('');
+const bankAccountNumber = ref('');
+const swiftCode = ref('');
+const accountHolderName = ref('');
 
 const userWallets = computed(() => user.value || {});
 
@@ -71,19 +77,18 @@ async function handleWithdrawConfirm() {
     return;
   }
   if (withdrawMethod.value === 'bank') {
-    if (!cardName?.value || !cardEmail?.value || !cardNumber?.value || !cardExpiry?.value || !cardCVC?.value) {
-      withdrawError.value = 'Please fill in all card details.';
+    if (!withdrawAmount.value || !bankName.value || !bankAccountNumber.value || !swiftCode.value || !accountHolderName.value) {
+      withdrawError.value = 'Please fill in all bank details.';
       return;
     }
     try {
       await addDoc(collection(db, 'WithdrawRequest'), {
         uid: user.value?.uid || '',
         amount: amount,
-        name: cardName.value,
-        email: cardEmail.value,
-        cardNumber: cardNumber.value,
-        cardExpiry: cardExpiry.value,
-        cardCVC: cardCVC.value,
+        bankName: bankName.value,
+        bankAccountNumber: bankAccountNumber.value,
+        swiftCode: swiftCode.value,
+        accountHolderName: accountHolderName.value,
         method: 'bank',
         status: 'pending',
         createdAt: serverTimestamp(),
@@ -117,13 +122,7 @@ async function handleWithdrawConfirm() {
   }
 }
 
-import { ref, watch } from 'vue';
-import { useDark, useToggle } from '@vueuse/core';
-import { useUserStore } from '../stores/userStore';
-import { useRouter } from 'vue-router';
-import { storeToRefs } from 'pinia';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
+
 
 const userBalance = ref(0);
 const userTotalProfit = ref(0);
@@ -247,72 +246,44 @@ async function fetchWithdrawHistory() {
               <button @click="withdrawMethod = 'crypto'; withdrawStep = 1;" class="w-full bg-gray-800 text-white py-3 rounded-lg font-bold text-lg shadow-md hover:bg-gray-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">External Crypto Wallet</button>
             </div>
           </div>
-          <form v-else-if="withdrawStep === 1 && withdrawMethod === 'bank'" @submit.prevent="handleWithdrawConfirm" class="space-y-5">
-            <div>
-              <label class="block text-sm font-semibold text-dark dark:text-white mb-2">Withdraw Amount</label>
-              <input type="number" v-model="withdrawAmount" :max="userBalance" min="0.01" step="0.01"
-                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition placeholder-gray-400 dark:placeholder-gray-500"
-                :placeholder="'Max: $' + userBalance.toFixed(2)" />
-              <div v-if="withdrawAmount && parseFloat(withdrawAmount) > userBalance" class="text-red-500 text-xs mt-1">Amount exceeds your balance.</div>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-dark dark:text-white mb-1">Name on Card</label>
-              <input type="text" v-model="cardName"
-                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition placeholder-gray-400 dark:placeholder-gray-500"
-                placeholder="Full name as on card" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-dark dark:text-white mb-1">Email</label>
-              <input type="email" v-model="cardEmail"
-                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition placeholder-gray-400 dark:placeholder-gray-500"
-                placeholder="Enter your email" />
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-dark dark:text-white mb-1">Card Number</label>
-              <div class="relative flex items-center">
-                <svg class="absolute left-3 w-6 h-6 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <rect x="2" y="7" width="20" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                  <rect x="6" y="11" width="2" height="2" rx="1" fill="currentColor"/>
-                  <rect x="10" y="11" width="2" height="2" rx="1" fill="currentColor"/>
-                  <rect x="14" y="11" width="2" height="2" rx="1" fill="currentColor"/>
-                </svg>
-                <input type="text" v-model="cardNumber"
-                  class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 pl-12 pr-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition placeholder-gray-400 dark:placeholder-gray-500 tracking-widest"
-                  placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="cc-number" />
+            <form v-else-if="withdrawStep === 1 && withdrawMethod === 'bank'" @submit.prevent="handleWithdrawConfirm" class="space-y-5">
+              <div>
+                <label class="block text-sm font-semibold text-dark dark:text-white mb-2">Withdraw Amount</label>
+                <input type="number" v-model="withdrawAmount" :max="userBalance" min="0.01" step="0.01"
+                  class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition placeholder-gray-400 dark:placeholder-gray-500"
+                  :placeholder="'Max: $' + userBalance.toFixed(2)" />
+                <div v-if="withdrawAmount && parseFloat(withdrawAmount) > userBalance" class="text-red-500 text-xs mt-1">Amount exceeds your balance.</div>
               </div>
-            </div>
-            <div class="flex space-x-3">
-              <div class="w-1/2">
-                <label class="block text-sm font-semibold text-dark dark:text-white mb-1">MM/YY</label>
-                <div class="relative flex items-center">
-                  <svg class="absolute left-3 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                    <path d="M16 3v4M8 3v4" stroke="currentColor" stroke-width="1.5"/>
-                  </svg>
-                  <input type="text" :value="cardExpiry" @input="onCardExpiryInput"
-                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 pl-10 pr-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition placeholder-gray-400 dark:placeholder-gray-500 tracking-widest"
-                    placeholder="MM/YY" maxlength="5" autocomplete="cc-exp" />
-                </div>
+              <div>
+                <label class="block text-sm font-semibold text-dark dark:text-white mb-1">Bank Name</label>
+                <input type="text" v-model="bankName"
+                  class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition placeholder-gray-400 dark:placeholder-gray-500"
+                  placeholder="Enter your bank name" />
               </div>
-              <div class="w-1/2">
-                <label class="block text-sm font-semibold text-dark dark:text-white mb-1">CCV</label>
-                <div class="relative flex items-center">
-                  <svg class="absolute left-3 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                    <circle cx="12" cy="12" r="3" fill="currentColor"/>
-                  </svg>
-                  <input type="text" v-model="cardCVC"
-                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 pl-10 pr-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition placeholder-gray-400 dark:placeholder-gray-500 tracking-widest"
-                    placeholder="CCV" maxlength="4" autocomplete="cc-csc" />
-                </div>
+              <div>
+                <label class="block text-sm font-semibold text-dark dark:text-white mb-1">Bank Account Number</label>
+                <input type="text" v-model="bankAccountNumber"
+                  class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition placeholder-gray-400 dark:placeholder-gray-500"
+                  placeholder="Enter your bank account number" />
               </div>
-            </div>
-            <div v-if="withdrawError" class="text-red-500 text-sm text-center">{{ withdrawError }}</div>
-            <button type="submit"
-              class="w-full bg-primary text-white py-3 rounded-lg font-bold text-lg shadow-md hover:bg-primary/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-              Confirm Withdraw
-            </button>
-          </form>
+              <div>
+                <label class="block text-sm font-semibold text-dark dark:text-white mb-1">SWIFT Code</label>
+                <input type="text" v-model="swiftCode"
+                  class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition placeholder-gray-400 dark:placeholder-gray-500"
+                  placeholder="Enter SWIFT code" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-dark dark:text-white mb-1">Account Holder Name</label>
+                <input type="text" v-model="accountHolderName"
+                  class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition placeholder-gray-400 dark:placeholder-gray-500"
+                  placeholder="Enter account holder name" />
+              </div>
+              <div v-if="withdrawError" class="text-red-500 text-sm text-center">{{ withdrawError }}</div>
+              <button type="submit"
+                class="w-full bg-primary text-white py-3 rounded-lg font-bold text-lg shadow-md hover:bg-primary/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                Confirm Withdraw
+              </button>
+            </form>
           <form v-else-if="withdrawStep === 1 && withdrawMethod === 'crypto'" @submit.prevent="handleWithdrawConfirm" class="space-y-5">
             <div>
               <label class="block text-sm font-semibold text-dark dark:text-white mb-2">Withdraw Amount</label>
