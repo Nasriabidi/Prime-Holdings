@@ -5,7 +5,7 @@ import { getFirestore } from 'firebase/firestore';
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDietb8SR0Q2_E5xiCiXsj7kOzsWobDydw",
+  apiKey: "AIzaSyna_E5xiCiXsj7kOzsWobDydw",
   authDomain: "prime-holdings.firebaseapp.com",
   projectId: "prime-holdings",
   storageBucket: "prime-holdings.firebasestorage.com",
