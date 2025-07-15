@@ -250,9 +250,11 @@
                       {{ loading ? 'Verifying...' : 'Recharge' }}
                     </button>
                     <p v-if="!idVerified" class="mb-3 px-4 py-3 rounded bg-green-100 text-green-800 font-semibold text-center border border-green-300">
-                      To enable account recharge, please complete your
-                      <router-link to="/profile" class="text-blue-700 underline hover:text-blue-900">profile</router-link>
-                      by verifying your ID. For your security, identity verification is mandatory. Click profile to get started.
+                      Complete Identity Verification <br/>
+For your security and to comply with local laws, PrimeHoldings requires identity verification before you can trade or recharge funds.<br/>
+
+Please complete your <router-link to="/profile" class="text-blue-700 underline hover:text-blue-900">profile</router-link> by verifying your ID — you’ll find the Identity Verification option under the 
+<b>Account Information</b> section.
                     </p>
                     <p v-if="error" class="text-red-500 mt-2">{{ error }}</p>
                   </form>
