@@ -1,5 +1,5 @@
-# Template for Prop Trading Dashboard
+# Dashboard for Prime Holdings
 
-Prop Dashboard Template on Vue3 and Vite can help you building own Prop Trading Panel.
+Prime Holdings Dashboard on Vue3 and Vite  own Trading Panel.
 
-Demo: http://prop-dash.dev4traders.com/
+https://primeholdings.duckdns.org/
