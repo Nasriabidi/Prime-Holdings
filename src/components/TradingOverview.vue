@@ -343,6 +343,40 @@ const isNotification = ref(false);
 const notifications = ref([]);
 const currentUserId = ref('');
 
+// Notification arrival effect
+const notifSound = new Audio('/assets/notification.mp3'); // Ensure this file exists in public/assets/
+const newNotifEffect = ref(false);
+const LAST_SEEN_NOTIF_KEY = 'lastSeenNotifTimestamp';
+
+function getLastSeenTimestamp() {
+  return Number(localStorage.getItem(LAST_SEEN_NOTIF_KEY) || 0);
+}
+function setLastSeenTimestamp(ts) {
+  localStorage.setItem(LAST_SEEN_NOTIF_KEY, String(ts));
+}
+
+watch(notifications, (newVal, oldVal) => {
+  if (newVal && newVal.length > 0) {
+    const latest = newVal[newVal.length - 1];
+    const latestTs = latest.timestamp?.seconds || 0;
+    const lastSeen = getLastSeenTimestamp();
+    if (latestTs > lastSeen) {
+      newNotifEffect.value = true;
+      notifSound.play();
+    }
+  }
+});
+
+function handleNotifIconClick() {
+  isNotification.value = !isNotification.value;
+  if (isNotification.value && notifications.value.length > 0) {
+    const latest = notifications.value[notifications.value.length - 1];
+    const latestTs = latest.timestamp?.seconds || 0;
+    setLastSeenTimestamp(latestTs);
+    newNotifEffect.value = false;
+  }
+}
+
 const router = useRouter();
 const userStore = useUserStore();
 const { user } = storeToRefs(userStore);
@@ -468,7 +502,11 @@ watch(() => userStore.user?.uid, (uid) => {
         </span>
       </button>
       <div class="h-notification group">
-        <div class="hn-icon group-hover:bg-dark" @click="isNotification = !isNotification">
+        <div
+          class="hn-icon group-hover:bg-dark"
+          :class="{ 'animate-shake': newNotifEffect, 'ring-2 ring-primary': newNotifEffect }"
+          @click="handleNotifIconClick"
+        >
           <svg class="icon" focusable="false" viewBox="0 0 24 24" aria-hidden="true">
             <path
                 d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"></path>

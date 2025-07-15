@@ -241,9 +241,19 @@
                     <label class="block mb-2 font-semibold">Recharge  Amount</label>
                     <input v-model.number="amount" type="number" style="color: black;" min="1" step="0.01" required
                       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300 mb-4" />
-                    <button type="submit" :disabled="loading" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">
+                    <button type="submit"
+                      :disabled="loading || !idVerified"
+                      :class="['w-full py-2 rounded transition font-bold text-lg',
+                        idVerified ? 'bg-green-600 text-white hover:bg-green-700 shadow-md' : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 border border-gray-400']"
+                      style="box-shadow: 0 2px 8px rgba(34,197,94,0.15); letter-spacing: 0.03em;"
+                    >
                       {{ loading ? 'Verifying...' : 'Recharge' }}
                     </button>
+                    <p v-if="!idVerified" class="mb-3 px-4 py-3 rounded bg-green-100 text-green-800 font-semibold text-center border border-green-300">
+                      To enable account recharge, please complete your
+                      <router-link to="/profile" class="text-blue-700 underline hover:text-blue-900">profile</router-link>
+                      by verifying your ID. For your security, identity verification is mandatory. Click profile to get started.
+                    </p>
                     <p v-if="error" class="text-red-500 mt-2">{{ error }}</p>
                   </form>
                 </template>
@@ -413,6 +423,7 @@ const isNotification = ref(false);
 const notifications = ref([]);
 const currentUserId = ref('');
 const { user } = storeToRefs(userStore);
+const idVerified = ref(false);
 
 watch(user, (newUser) => {
   if (newUser && newUser.uid) {
@@ -453,6 +464,7 @@ onMounted(() => {
     unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         balance.value = docSnap.data().balance || 0;
+        idVerified.value = docSnap.data().idverified === true;
       }
     });
     // Listen to recharge history
@@ -471,6 +483,7 @@ watch(() => userStore.user?.uid, (uid) => {
     unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         balance.value = docSnap.data().balance || 0;
+        idVerified.value = docSnap.data().idverified === true;
       }
     });
     // Listen to recharge history

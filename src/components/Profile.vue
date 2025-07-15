@@ -4,12 +4,14 @@ import { useDark, useToggle } from '@vueuse/core';
 import { useUserStore } from '../stores/userStore';
 import { auth, db } from '../firebase/config';
 import { updateProfile, updateEmail, updatePassword } from 'firebase/auth';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
 
 const isDark = useDark();
 const toggleDark = useToggle(isDark);
 const userStore = useUserStore();
+const { user } = storeToRefs(userStore);
 
 // Edit profile state
 const firstName = ref('');
@@ -26,13 +28,27 @@ const loadingPassword = ref(false);
 const passwordError = ref('');
 const passwordSuccess = ref('');
 const router = useRouter();
+const selectedIdType = ref('');
+const idName = ref('');
+const idNumber = ref('');
+const idFrontPreview = ref('');
+const idBackPreview = ref('');
+const idHoldPreview = ref('');
+const passportName = ref('');
+const passportNumber = ref('');
+const passportHoldPreview = ref('');
+const idFrontInput = ref(null);
+const idBackInput = ref(null);
+const idHoldInput = ref(null);
+const passportHoldInput = ref(null);
+const showVerificationMsg = ref(false);
+const verificationMsg = ref('');
 
 function handleLogout() {
   localStorage.removeItem('user');
   userStore.setUser(null);
   router.push('/login');
 }
-
 
 const onPhotoChange = (e) => {
   const file = e.target.files[0];
@@ -137,6 +153,55 @@ const handlePasswordChange = async () => {
     loadingPassword.value = false;
   }
 };
+
+function triggerFileInput(type) {
+  if (type === 'front' && idFrontInput.value) idFrontInput.value.click();
+  if (type === 'back' && idBackInput.value) idBackInput.value.click();
+  if (type === 'hold' && idHoldInput.value) idHoldInput.value.click();
+  if (type === 'passportHold' && passportHoldInput.value) passportHoldInput.value.click();
+}
+
+function handleImageUpload(event, type) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    if (type === 'front') idFrontPreview.value = e.target.result;
+    if (type === 'back') idBackPreview.value = e.target.result;
+    if (type === 'hold') idHoldPreview.value = e.target.result;
+    if (type === 'passportHold') passportHoldPreview.value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitIdVerification() {
+  let docData = {};
+  if (selectedIdType.value === 'idcard') {
+    docData = {
+      uid: user.value?.uid || '',
+      type: 'idcard',
+      name: idName.value,
+      idNumber: idNumber.value,
+      submittedAt: new Date().toISOString(),
+    };
+  } else if (selectedIdType.value === 'passport') {
+    docData = {
+      uid: user.value?.uid || '',
+      type: 'passport',
+      name: passportName.value,
+      passportNumber: passportNumber.value,
+      submittedAt: new Date().toISOString(),
+    };
+  }
+  try {
+    await addDoc(collection(db, 'Idverificationreq'), docData);
+    showVerificationMsg.value = true;
+    verificationMsg.value = `Thank you for submitting your identity documents. Your verification request is now under review. This process usually takes between 24–48 hours.\n\nWe’ll notify you as soon as your account is verified.`;
+  } catch (e) {
+    verificationMsg.value = 'Submission failed. Please try again.';
+    showVerificationMsg.value = true;
+  }
+}
 </script>
 <template>
   <header class="header-area" :class="isSidebar ? 'header-area' : 'xl:!w-[calc(100%-73px)] xl:!ml-[73px]'">
@@ -454,10 +519,80 @@ const handlePasswordChange = async () => {
                   </form>
                 </div>
               </div>
+              <!-- ID Verification Section -->
+              <div class="mt-8">
+                <h3 class="text-xl font-bold mb-4 text-dark dark:text-white">Identity Verification</h3>
+                <div class="bg-white dark:bg-toggle rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+                  <label class="block text-lg font-semibold mb-2 text-dark dark:text-white">Choose document type:</label>
+                  <div class="flex gap-6 mb-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" v-model="selectedIdType" value="idcard" class="accent-green-600" />
+                      <span class="font-medium text-dark dark:text-white">ID Card</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" v-model="selectedIdType" value="passport" class="accent-green-600" />
+                      <span class="font-medium text-dark dark:text-white">Passport</span>
+                    </label>
+                  </div>
+                  <div v-if="selectedIdType === 'idcard'" class="mt-4">
+                    <div class="mb-4 flex flex-col gap-4">
+                      <input style="color: black;" type="text" v-model="idName" placeholder="Name" class="w-full px-4 py-2 border rounded-lg" />
+                      <input style="color: black;" type="text" v-model="idNumber" placeholder="ID number" class="w-full px-4 py-2 border rounded-lg" />
+                    </div>
+                    <div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label class="block mb-2 font-semibold">Front of ID card</label>
+                        <div class="relative w-full h-32 flex items-center justify-center border-2 border-dashed rounded-lg cursor-pointer bg-gray-50" @click="triggerFileInput('front')">
+                          <span v-if="!idFrontPreview" class="text-4xl text-green-600 font-bold">+</span>
+                          <img v-if="idFrontPreview" :src="idFrontPreview" class="max-h-28 max-w-full object-contain rounded" />
+                          <input ref="idFrontInput" type="file" accept="image/*" class="hidden" @change="handleImageUpload($event, 'front')" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block mb-2 font-semibold">Back of ID card</label>
+                        <div class="relative w-full h-32 flex items-center justify-center border-2 border-dashed rounded-lg cursor-pointer bg-gray-50" @click="triggerFileInput('back')">
+                          <span v-if="!idBackPreview" class="text-4xl text-green-600 font-bold">+</span>
+                          <img v-if="idBackPreview" :src="idBackPreview" class="max-h-28 max-w-full object-contain rounded" />
+                          <input ref="idBackInput" type="file" accept="image/*" class="hidden" @change="handleImageUpload($event, 'back')" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block mb-2 font-semibold">Photo holding ID card</label>
+                        <div class="relative w-full h-32 flex items-center justify-center border-2 border-dashed rounded-lg cursor-pointer bg-gray-50" @click="triggerFileInput('hold')">
+                          <span v-if="!idHoldPreview" class="text-4xl text-green-600 font-bold">+</span>
+                          <img v-if="idHoldPreview" :src="idHoldPreview" class="max-h-28 max-w-full object-contain rounded" />
+                          <input ref="idHoldInput" type="file" accept="image/*" class="hidden" @change="handleImageUpload($event, 'hold')" />
+                        </div>
+                      </div>
+                    </div>
+                    <button @click="submitIdVerification" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold text-lg shadow-md hover:bg-green-700 transition-all duration-200">Confirm</button>
+                  </div>
+                  <div v-else-if="selectedIdType === 'passport'" class="mt-4">
+                    <div class="mb-4 flex flex-col gap-4">
+                      <input style="color: black;" type="text" v-model="passportName" placeholder="Name" class="w-full px-4 py-2 border rounded-lg" />
+                      <input style="color: black;" type="text" v-model="passportNumber" placeholder="Passport number" class="w-full px-4 py-2 border rounded-lg" />
+                    </div>
+                    <div class="mb-4">
+                      <label class="block mb-2 font-semibold">Photo holding Passport</label>
+                      <div class="relative w-full h-32 flex items-center justify-center border-2 border-dashed rounded-lg cursor-pointer bg-gray-50" @click="triggerFileInput('passportHold')">
+                        <span v-if="!passportHoldPreview" class="text-4xl text-green-600 font-bold">+</span>
+                        <img v-if="passportHoldPreview" :src="passportHoldPreview" class="max-h-28 max-w-full object-contain rounded" />
+                        <input ref="passportHoldInput" type="file" accept="image/*" class="hidden" @change="handleImageUpload($event, 'passportHold')" />
+                      </div>
+                    </div>
+                    <button @click="submitIdVerification" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold text-lg shadow-md hover:bg-green-700 transition-all duration-200">Confirm</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <transition name="fade">
+        <div v-if="showVerificationMsg" class="fixed top-8 left-1/2 z-50 -translate-x-1/2 bg-green-100 text-green-800 px-6 py-4 rounded-[10px] shadow-lg text-lg font-semibold text-center border border-green-300 animate-fade-in" style="max-width: 420px;">
+          {{ verificationMsg }}
+        </div>
+      </transition>
     </div>
   </main>
 </template>
@@ -483,5 +618,17 @@ export default {
 </script>
 
 <style scoped>
-
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.4s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+.animate-fade-in {
+  animation: fadeIn 0.5s;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 </style>

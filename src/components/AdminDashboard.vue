@@ -32,7 +32,7 @@
             All Users
           </button>
         </li>
-          <li>
+        <li>
             <button
               @click="activeSection = 'crypto'; sidebarOpen = false"
               :class="[ 'hover:underline font-semibold', activeSection === 'crypto' ? 'text-primary' : '' ]"
@@ -84,6 +84,15 @@
               style="background:none;border:none;padding:0;cursor:pointer"
             >
               Allow Trading Control
+            </button>
+          </li>
+          <li>
+            <button
+              @click="activeSection = 'idVerification'; sidebarOpen = false"
+              :class="[ 'hover:underline font-semibold', activeSection === 'idVerification' ? 'text-primary' : '' ]"
+              style="background:none;border:none;padding:0;cursor:pointer"
+            >
+              ID Verification
             </button>
           </li>
         </ul>
@@ -260,7 +269,7 @@
         <div v-else-if="!selectedSessionUser" class="text-gray-500 mb-2">Please select a user to view live sessions.</div>
         <div v-else-if="filteredLiveSessions.length === 0" class="text-gray-500 mb-2">No live sessions found for this user.</div>
         <div v-else class="overflow-x-auto">
-          <table class="min-w-full border text-sm">
+          <table class=" border text-sm">
             <thead>
               <tr class="bg-gray-100 dark:bg-dark">
                 <th class="border px-2 py-1">Profit</th>
@@ -442,6 +451,51 @@
           </table>
         </div>
         <div v-if="rechargeError" class="text-red-500 mt-2">{{ rechargeError }}</div>
+      </section>
+      <!-- ID Verification Section -->
+      <section v-if="activeSection === 'idVerification'" id="id-verification" class="mb-8 md:mb-10">
+        <h2 class="text-2xl font-bold mb-6 md:mb-8">ID Verification</h2>
+        <div class="mb-4">
+          <label class="block mb-1 font-semibold">Select User (by Email):</label>
+          <select v-model="selectedUserForIdVerification" class="border rounded px-2 py-1 w-full max-w-xs">
+            <option v-for="user in users" :key="user.uid" :value="user.uid" style="color: black;">
+              {{ user.email || user.displayName || user.uid }}
+            </option>
+          </select>
+        </div>
+        <div v-if="idVerificationLoading" class="text-gray-500">Loading ID verification requests...</div>
+        <div v-else-if="idVerificationReqs.length === 0" class="text-gray-500">No ID verification requests found for this user.</div>
+        <div v-else>
+          <table class="border text-sm mb-4">
+            <thead>
+              <tr class="bg-gray-100 dark:bg-dark">
+                <th class="border px-2 py-1">Type</th>
+                <th class="border px-2 py-1">Name</th>
+                <th class="border px-2 py-1">ID/Passport Number</th>
+                <th class="border px-2 py-1">idverified</th>
+                <th class="border px-2 py-1">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="req in idVerificationReqs" :key="req.id">
+                <td class="border px-2 py-1">{{ req.type === 'idcard' ? 'ID Card' : 'Passport' }}</td>
+                <td class="border px-2 py-1">{{ req.name }}</td>
+                <td class="border px-2 py-1">{{ req.type === 'idcard' ? req.idNumber : req.passportNumber }}</td>
+                <td class="border px-2 py-1">
+                  <span :class="getUserIdVerified(req.uid) ? 'text-green-600 font-bold' : 'text-red-600 font-bold'">
+                    {{ getUserIdVerified(req.uid) ? 'True' : 'False' }}
+                  </span>
+                </td>
+                <td class="border px-2 py-1">
+                  <button @click="setIdVerified(req, true)" :disabled="getUserIdVerified(req.uid) === true || idVerificationActionLoading" class="px-2 py-1 bg-green-500 text-white rounded mr-1 disabled:opacity-50">True</button>
+                  <button @click="setIdVerified(req, false)" :disabled="getUserIdVerified(req.uid) === false || idVerificationActionLoading" class="px-2 py-1 bg-red-500 text-white rounded disabled:opacity-50">False</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-if="idVerificationError" class="text-red-500 mt-2">{{ idVerificationError }}</div>
+          <div v-if="idVerificationFeedback" class="text-green-600 mt-2">{{ idVerificationFeedback }}</div>
+        </div>
       </section>
     </main>
   </div>
@@ -827,6 +881,66 @@ async function setWithdrawStatus(item, status) {
     withdrawError.value = 'Failed to update: ' + (e.message || e);
   } finally {
     setTimeout(() => (withdrawFeedback.value = ''), 1500);
+  }
+}
+
+const selectedUserForIdVerification = ref('');
+const idVerificationReqs = ref([]);
+const idVerificationLoading = ref(false);
+const idVerificationError = ref('');
+const idVerificationFeedback = ref('');
+const idVerificationActionLoading = ref(false);
+
+watch(selectedUserForIdVerification, async (uid) => {
+  idVerificationReqs.value = [];
+  idVerificationError.value = '';
+  if (!uid) return;
+  idVerificationLoading.value = true;
+  try {
+    const q = query(collection(db, 'Idverificationreq'), where('uid', '==', uid));
+    const snap = await getDocs(q);
+    idVerificationReqs.value = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (e) {
+    idVerificationError.value = 'Failed to fetch: ' + (e.message || e);
+  } finally {
+    idVerificationLoading.value = false;
+  }
+});
+
+function getUserIdVerified(uid) {
+  const user = users.value.find(u => u.uid === uid);
+  return user ? user.idverified === true : false;
+}
+
+async function setIdVerified(req, value) {
+  if (!req.uid) return;
+  idVerificationError.value = '';
+  idVerificationFeedback.value = '';
+  idVerificationActionLoading.value = true;
+  try {
+    // Only update the user's idverified field in users collection
+    const userDocRef = doc(db, 'users', req.uid);
+    await updateDoc(userDocRef, { idverified: value });
+    // Update local users array for UI
+    const idx = users.value.findIndex(u => u.uid === req.uid);
+    if (idx !== -1) users.value[idx].idverified = value;
+    // Send notification if verified
+    if (value === true) {
+      const user = users.value[idx];
+      const userName = user?.displayName || user?.firstName || user?.email || req.uid;
+      const notificationMsg = `✅ Account Verified\n Hi ${userName}, your identity has been successfully verified. Your account is now fully active and you can enjoy all the features of Prime Holdings.\n\nStart trading with confidence today! 🚀`;
+      await addDoc(collection(db, 'notifications'), {
+        userId: req.uid,
+        message: notificationMsg,
+        timestamp: serverTimestamp(),
+      });
+    }
+    idVerificationFeedback.value = 'idverified updated!';
+  } catch (e) {
+    idVerificationError.value = 'Failed to update: ' + (e.message || e);
+  } finally {
+    idVerificationActionLoading.value = false;
+    setTimeout(() => (idVerificationFeedback.value = ''), 1500);
   }
 }
 
