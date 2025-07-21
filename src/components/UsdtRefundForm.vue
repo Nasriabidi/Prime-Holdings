@@ -371,10 +371,10 @@ const cryptoList = [
   { name: "Bitcoin", symbol: "BTC", address: "3MgWKCAsLxGbJRQYQVwZtEQjmgbdVtD3ws", network: "Bitcoin" },
   { name: "Ethereum", symbol: "ETH", address: "0x9806f48984adb1d6f935a6a8d5bafa8e68adcf84", network: "ERC20" },
   { name: "Litecoin", symbol: "LTC", address: "ltc1qg82a6qg5zsgmmhv7ny95a78ywlyjqrc9e3r2sx", network: "Litecoin" },
-  { name: "Solana", symbol: "SOL", address: "4Nd1mZMU8dT7QKuQFY1FvsoVRRVXn8nDp4ijyL6Vke1w", network: "Solana" },
-  { name: "Dogecoin", symbol: "DOGE", address: "DShDwzC7P5y1zD8Q8bHPZ1mK5FAbPZk9tV", network: "Dogecoin" },
+  { name: "Solana", symbol: "SOL", address: "4VAYpvMKLX43bpcKydaX5FjYxEM96AYdG2sb7RJVUyKr", network: "Solana" },
+  { name: "Dogecoin", symbol: "DOGE", address: "DLPsQGMGsLEAKM9KuNkTm6KEKk92a95y8c", network: "Dogecoin" },
   { name: "Ripple", symbol: "XRP", address: "rDsbeomae4FXwgQTJp9Rs64Qg9vDiTCdBv", network: "Ripple" },
-  { name: "Cardano", symbol: "ADA", address: "addr1q9vvqug3ah6apxcn5grl6nxh42w47wd45cn9p6j7ak5sdwvv70q7cj39r7u9ft29y8txp0d9k5h62wqexw0zt88c9flqvj70cx", network: "Cardano" },
+  { name: "Cardano", symbol: "ADA", address: "addr1q9qyluulh7ascrv3lemg35vpqsapp4z62yyhj355lzvgl386scxsdhq6r0vwcfyhl3pkp9rqvywwmm387m44rsxmphes5qmv2j", network: "Cardano" },
 ];
 const selectedCryptoName = computed(() => {
   const found = cryptoList.find(c => c.symbol === selectedCrypto.value);
