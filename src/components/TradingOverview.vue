@@ -9,10 +9,9 @@ async function downloadHistoryPdf() {
     doc.setFontSize(16);
     doc.text('Trading History', 14, 16);
     const tableColumn = [
-      'SN', 'Open Time', 'Open Price', 'Close Time', 'Close Price', 'Profit', 'Commission', 'Symbol', 'Type'
+      'Open Time', 'Open Price', 'Close Time', 'Close Price', 'Profit', 'Commission', 'Symbol', 'Type'
     ];
     const tableRows = tradingHistory.value.map((item, idx) => [
-      idx + 1,
       item.opentime && (item.opentime.seconds ? new Date(item.opentime.seconds * 1000).toLocaleString() : new Date(item.opentime).toLocaleString()),
       item.openprice,
       item.closetime && (item.closetime.seconds ? new Date(item.closetime.seconds * 1000).toLocaleString() : new Date(item.closetime).toLocaleString()),
