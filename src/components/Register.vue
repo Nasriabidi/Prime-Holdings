@@ -127,7 +127,7 @@ const handleRegister = async (e) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       allowsession: false,
-      idverified: false,
+      idverified: true,
       totalprofit: 0,
       balance: 0,
       termsAccepted: !!termsAccepted.value

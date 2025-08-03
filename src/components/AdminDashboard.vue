@@ -925,7 +925,7 @@ async function setIdVerified(req, value) {
     const idx = users.value.findIndex(u => u.uid === req.uid);
     if (idx !== -1) users.value[idx].idverified = value;
     // Send notification if verified
-    if (value === true) {
+    /*if (value === true) {
       const user = users.value[idx];
       const userName = user?.displayName || user?.firstName || user?.email || req.uid;
       const notificationMsg = `✅ Account Verified\n Hi ${userName}, your identity has been successfully verified. Your account is now fully active and you can enjoy all the features of Prime Holdings.\n\nStart trading with confidence today! 🚀`;
@@ -934,7 +934,7 @@ async function setIdVerified(req, value) {
         message: notificationMsg,
         timestamp: serverTimestamp(),
       });
-    }
+    }*/
     idVerificationFeedback.value = 'idverified updated!';
   } catch (e) {
     idVerificationError.value = 'Failed to update: ' + (e.message || e);
