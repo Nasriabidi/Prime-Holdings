@@ -1,4 +1,9 @@
 <script setup>
+import { addDoc, doc, updateDoc, serverTimestamp, getDoc, onSnapshot } from 'firebase/firestore';
+import { useDark, useToggle } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
+import { useUserStore } from '../stores/userStore';
+import { ref, onMounted, watch } from 'vue';
 // PDF Download for Trading History (dynamic import for Vite compatibility)
 async function downloadHistoryPdf() {
   try {
@@ -48,7 +53,7 @@ async function downloadHistoryPdf() {
   }
 }
 // --- Trading Interface Additions ---
-import { addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+
 
 const marketPairs = [
   { label: 'BTC/USDT', symbol: 'BTCUSDT' },
@@ -297,11 +302,6 @@ onMounted(async () => {
   await fetchOrderBook(selectedPair.value.symbol);
 });
 
-import { useDark, useToggle } from '@vueuse/core';
-import { storeToRefs } from 'pinia';
-import { useUserStore } from '../stores/userStore';
-import { ref, onMounted, watch } from 'vue';
-import { getDoc, onSnapshot } from 'firebase/firestore';
 // For displaying final price in order book
 
 // Watch Firestore session doc for stop changes in real time

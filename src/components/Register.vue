@@ -6,6 +6,7 @@ import { auth, db } from '../firebase/config';
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 const router = useRouter();
 const isDark = useDark();
@@ -142,6 +143,19 @@ const handleRegister = async (e) => {
       error.value = 'Failed to save user data.';
       firestoreError = firestoreErr;
     }
+
+    // Create notification for the new user
+    try {
+      await addDoc(collection(db, 'notifications'), {
+        userId: user.uid,
+        message: 'New Bonus System Live🚀! Deposit & get up to $25,000 💵bonus instantly — check your reward tier now!',
+        timestamp: serverTimestamp(),
+      });
+      console.log('Register: notification created for user');
+    } catch (notifErr) {
+      console.error('Register: Failed to create notification', notifErr);
+    }
+
     // Always navigate to login, but show error if Firestore failed
     // Show a modern success message to check email for verification
     success.value = 'Registration successful! Please check your email to verify your account before logging in.';

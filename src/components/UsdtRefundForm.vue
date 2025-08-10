@@ -341,6 +341,46 @@ Please complete your <router-link to="/profile" class="text-blue-700 underline h
                     </div>
                   </div>
                 </div>
+                <div class="mt-8 p-4 bg-white border border-gray-300 rounded-lg shadow-md dark:bg-dark dark:border-gray-700">
+                  <h3 class="text-lg font-bold text-primary mb-2">🚀 New Trading Bonus System</h3>
+                  <p class="text-gray-700 dark:text-gray-300 mb-4">Deposit more, trade bigger — enjoy instant bonuses designed to match pro-level opportunities.</p>
+                  <ul class="list-disc pl-5 text-gray-700 dark:text-gray-300 mb-4">
+                    <li class="flex items-center mb-2">
+                      <span class="mr-2 text-green-500 animate-bounce">💰</span>
+                      $250 – $999 → +$50 bonus
+                    </li>
+                    <li class="flex items-center mb-2">
+                      <span class="mr-2 text-green-500 animate-bounce">💰</span>
+                      $1,000 – $4,999 → +$150 bonus
+                    </li>
+                    <li class="flex items-center mb-2">
+                      <span class="mr-2 text-green-500 animate-bounce">💰</span>
+                      $5,000 – $9,999 → +$600 bonus
+                    </li>
+                    <li class="flex items-center mb-2">
+                      <span class="mr-2 text-green-500 animate-bounce">💰</span>
+                      $10,000 – $24,999 → +$1,500 bonus
+                    </li>
+                    <li class="flex items-center mb-2">
+                      <span class="mr-2 text-green-500 animate-bounce">💰</span>
+                      $25,000 – $49,999 → +$4,500 bonus
+                    </li>
+                    <li class="flex items-center mb-2">
+                      <span class="mr-2 text-green-500 animate-bounce">💰</span>
+                      $50,000 – $99,999 → +$10,000 bonus
+                    </li>
+                    <li class="flex items-center mb-2">
+                      <span class="mr-2 text-green-500 animate-bounce">💰</span>
+                      $100,000 and above → +$25,000 bonus
+                    </li>
+                  </ul>
+                  <h4 class="text-md font-semibold text-primary mb-2">Bonus Rules:</h4>
+                  <ul class="list-disc pl-5 text-gray-700 dark:text-gray-300">
+                    <li>Bonus credited instantly after deposit confirmation.</li>
+                    <li>Bonus can be used for trading immediately.</li>
+                    <li>Withdrawable profits from bonus trades are 100% yours.</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -497,6 +537,16 @@ watch(() => userStore.user?.uid, (uid) => {
   }
 });
 
+const calculateBonus = (amount) => {
+  if (amount >= 250 && amount <= 999) return 50;
+  if (amount >= 1000 && amount <= 4999) return 150;
+  if (amount >= 5000 && amount <= 9999) return 600;
+  if (amount >= 10000 && amount <= 24999) return 1500;
+  if (amount >= 25000 && amount <= 49999) return 4500;
+  if (amount >= 50000 && amount <= 99999) return 10000;
+  if (amount >= 100000) return 25000;
+  return 0;
+};
 
 const handleSubmit = () => {
   error.value = '';
@@ -504,6 +554,10 @@ const handleSubmit = () => {
     error.value = 'Please enter a valid amount.';
     return;
   }
+
+  const bonus = calculateBonus(amount.value);
+  amount.value += bonus; // Add bonus to the amount
+
   step.value = 2;
   selectedCrypto.value = '';
 };
