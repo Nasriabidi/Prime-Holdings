@@ -646,14 +646,15 @@ function handleLogout() {
                 </div>
                 <h4 class="text-dark text-[15px] font-medium leading-[1.167] tracking-[-0.05px] dark:text-white"></h4>
                 <a
-                  href="https://t.me/CustomerService" target="_blank" rel="noopener noreferrer"
-                  class="flex flex-wrap items-center px-[16px] py-[18px] rounded-[6px] mt-[15px] bg-white cursor-pointer  transition"
-                  title="Contact us on Telegram"
+                  @click="router.push('/support-request')"
+                  class="flex flex-wrap items-center px-[16px] py-[18px] rounded-[6px] mt-[15px] bg-white cursor-pointer transition"
+                  title="Contact Support"
                 >
                   <svg class="icon w-[24px] h-[24px] mr-[16px] fill-primary" focusable="false" viewBox="0 0 24 24"
                        aria-hidden="true">
                     <path
-                        d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"></path>
+                        d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"
+                    ></path>
                   </svg>
                   <span class="flex-1 break-all text-[14px] text-dark text-left">Contact Support</span>
                 </a>

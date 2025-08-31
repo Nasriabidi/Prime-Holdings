@@ -17,6 +17,7 @@ import Payment from "../components/Payment.vue";
 import Checkout from "../components/Checkout.vue";
 import AdminDashboard from "../components/AdminDashboard.vue";
 import Terms from "../components/TermsAndPolicy.vue";
+import SupportRequest from '../components/SupportRequest.vue';
 
 const routes = [
     {
@@ -108,6 +109,11 @@ const routes = [
         path: '/admin-dashboard',
         name: 'AdminDashboard',
         component: AdminDashboard
+    },
+    {
+        path: '/support-request',
+        name: 'SupportRequest',
+        component: SupportRequest,
     },
 ];
 
