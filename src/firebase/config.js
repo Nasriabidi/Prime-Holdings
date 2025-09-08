@@ -4,15 +4,14 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 
-
 const firebaseConfig = {
-  apiKey: "AIzaSyBRMpFa4kJ6w3CtY_iM9R4MEMe0ZgHnwjk",
-  authDomain: "prime-holdings-e056a.firebaseapp.com",
-  projectId: "prime-holdings-e056a",
-  storageBucket: "prime-holdings-e056a.firebasestorage.com",
-  messagingSenderId: "107248636580",
-  appId: "1:107248636580:web:51680fd60bf89232f10c31",
-  measurementId: "G-ED6NSDQHY4"
+  apiKey: "AIzaSyDietb8SR0Q2_E5xiCiXsj7kOzsWobDydw",
+  authDomain: "prime-holdings.firebaseapp.com",
+  projectId: "prime-holdings",
+  storageBucket: "prime-holdings.firebasestorage.com",
+  messagingSenderId: "739879969380",
+  appId: "1:739879969380:web:3ae5a98ed5ae73d564f571",
+  measurementId: "G-QEBTCX929Y"
 };
 
 // Initialize Firebase
